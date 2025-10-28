@@ -61,54 +61,55 @@ print(f"Microphone check complete. Will process after {recognizer.pause_threshol
 # -----------------------------------
 
 # --- 5. Main Loop: Listen, Transcribe, and Predict ---
-while True:
-    print("\nPress ENTER to start speaking...")
-    try:
-        input() # This line will WAIT until you press Enter
-    except KeyboardInterrupt:
-        print("\nStopping detector.")
-        break
-
-    print("🎤 Listening... Speak your full sentence now.")
-    # ---  I UPDATED THIS PRINT STATEMENT ---
-    print(f"(It will wait for {recognizer.pause_threshold}s of silence, then process)")
-    
-    with microphone as source:
+if __name__ == "__main__":
+    while True:
+        print("\nPress ENTER to start speaking...")
         try:
-            audio = recognizer.listen(source, timeout=5) 
-            
-            print("Processing audio...")
-            text = recognizer.recognize_google(audio)
-            
-            print(f"You said: '{text}'")
-
-            # --- PREDICTION ---
-            if not text.strip():
-                print("No speech detected. Listening again.")
-                continue
-
-            processed_text = preprocess_text(text)
-            text_vector = vectorizer.transform([processed_text])
-            prediction = model.predict(text_vector)
-            probability = model.predict_proba(text_vector)
-            
-            # --- Show Result ---
-            if prediction[0] == 1: # 1 means SCAM
-                fraud_prob = probability[0][1] * 100
-                print(f"--- 🚨 ALERT: SCAM DETECTED! 🚨 --- (Confidence: {fraud_prob:.2f}%)")
-            else: # 0 means NOT SCAM
-                normal_prob = probability[0][0] * 100
-                print(f"--- ✅ NORMAL call --- (Confidence: {normal_prob:.2f}%)")
-
-        except sr.WaitTimeoutError:
-            print("You pressed Enter but didn't speak. Please try again.")
-        except sr.UnknownValueError:
-            print("Could not understand audio. Please try again.")
-        except sr.RequestError as e:
-            print(f"Google Speech Recognition service error; {e}")
+            input() # This line will WAIT until you press Enter
         except KeyboardInterrupt:
             print("\nStopping detector.")
             break
-        except Exception as e:
-            print(f"An unexpected error occurred: {e}")
-            break
+
+        print("🎤 Listening... Speak your full sentence now.")
+        # ---  I UPDATED THIS PRINT STATEMENT ---
+        print(f"(It will wait for {recognizer.pause_threshold}s of silence, then process)")
+        
+        with microphone as source:
+            try:
+                audio = recognizer.listen(source, timeout=5) 
+                
+                print("Processing audio...")
+                text = recognizer.recognize_google(audio)
+                
+                print(f"You said: '{text}'")
+
+                # --- PREDICTION ---
+                if not text.strip():
+                    print("No speech detected. Listening again.")
+                    continue
+
+                processed_text = preprocess_text(text)
+                text_vector = vectorizer.transform([processed_text])
+                prediction = model.predict(text_vector)
+                probability = model.predict_proba(text_vector)
+                
+                # --- Show Result ---
+                if prediction[0] == 1: # 1 means SCAM
+                    fraud_prob = probability[0][1] * 100
+                    print(f"--- 🚨 ALERT: SCAM DETECTED! 🚨 --- (Confidence: {fraud_prob:.2f}%)")
+                else: # 0 means NOT SCAM
+                    normal_prob = probability[0][0] * 100
+                    print(f"--- ✅ NORMAL call --- (Confidence: {normal_prob:.2f}%)")
+
+            except sr.WaitTimeoutError:
+                print("You pressed Enter but didn't speak. Please try again.")
+            except sr.UnknownValueError:
+                print("Could not understand audio. Please try again.")
+            except sr.RequestError as e:
+                print(f"Google Speech Recognition service error; {e}")
+            except KeyboardInterrupt:
+                print("\nStopping detector.")
+                break
+            except Exception as e:
+                print(f"An unexpected error occurred: {e}")
+                break
